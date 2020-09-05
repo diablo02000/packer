@@ -1,0 +1,76 @@
+{
+  "variables": {
+    "win_iso_url": "https://software-download.microsoft.com/download/pr/19041.264.200511-0456.vb_release_svc_refresh_CLIENTENTERPRISEEVAL_OEMRET_x64FRE_en-us.iso",
+    "win_iso_sha256": "f1a4f2176259167cd2c8bf83f3f5a4039753b6cc28c35ac624da95a36e9620fc",
+    "vm_description": "Windows 10 64Bit Enterprise",
+    "vm_disk_size": "20480"
+  },
+  "builders": [
+    {
+
+      "type": "virtualbox-iso",
+  
+      "iso_url": "{{ user `win_iso_url`}}",
+      "iso_checksum": "sha256:{{user `win_iso_sha256`}}",
+  
+      "vm_name": "windows_10_64_enterprise",
+      "disk_size": "{{user `vm_disk_size`}}",
+      "floppy_files": [
+  	    "./scripts/Windows_10/autounattend.xml",
+	    "./scripts/Windows_10/enable_winrm.ps1",
+  	    "./scripts/Windows_10/update_windows.ps1"
+      ],
+      "guest_os_type": "Windows10_64",
+      "hard_drive_interface": "sata",
+      "iso_interface": "sata",
+
+      "guest_additions_mode": "upload",
+      "guest_additions_path": "c:/Windows/Temp/windows.iso",
+  
+      "boot_wait": "6m",
+      "boot_command": "",
+      "communicator": "winrm",
+      "winrm_username": "windows",
+      "winrm_password": "windows",
+      "shutdown_command": "shutdown /s /t 10 /f /d p:4:1 /c Packer_Provisioning_Shutdown",
+  
+      "vboxmanage": [
+        [
+          "modifyvm",
+  	  "{{.Name}}",
+  	  "--memory",
+  	  "4096"
+        ],
+        [
+          "modifyvm",
+  	  "{{.Name}}",
+    	  "--cpus",
+  	  "2"
+        ],
+        [
+          "modifyvm",
+  	  "{{.Name}}",
+    	  "--vram",
+  	  "32"
+        ]
+      ],
+  
+      "export_opts": [
+        "--manifest",
+        "--vsys", "0",
+        "--description", "{user `vm_description`}}"
+      ],
+  
+      "format": "ova",
+      "headless": "false"
+  }
+  ],
+  "provisioners": [
+    {
+      "type": "powershell",
+      "scripts": [
+	"./scripts/Windows_10/chocolatey.ps1"
+      ]
+    }
+  ]
+}
